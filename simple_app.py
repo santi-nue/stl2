@@ -1,19 +1,16 @@
-from tornado.wsgi import WSGIContainer
-from tornado.ioloop import IOLoop
-from tornado.web import FallbackHandler, RequestHandler, Application
-from flasky import app
+from flask import Flask
+app = Flask(__name__)
 
-class MainHandler(RequestHandler):
-  def get(self):
-    self.write("This message comes from Tornado ^_^")
-
-tr = WSGIContainer(app)
-
-application = Application([
-(r"/tornado", MainHandler),
-(r".*", FallbackHandler, dict(fallback=tr)),
-])
+@app.route("/")
+def hello():
+    return "Hello World!"
 
 if __name__ == "__main__":
-  application.listen(8000)
-  IOLoop.instance().start()
+
+    from tornado.wsgi import WSGIContainer
+    from tornado.httpserver import HTTPServer
+    from tornado.ioloop import IOLoop
+
+    http_server = HTTPServer(WSGIContainer(app))
+    http_server.listen(8000)
+    IOLoop.instance().start()
