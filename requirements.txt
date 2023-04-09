@@ -3,6 +3,7 @@ requests
 streamlit
 streamlit-lottie
 streamlit-webrtc
+Flasky
 openai
 streamlit-chat 
 qrcode
