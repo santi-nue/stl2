@@ -1,16 +1,39 @@
-from flask import Flask
-app = Flask(__name__)
+import requests
+import streamlit as st
 
-@app.route("/")
-def hello():
-    return "Hello World!"
+state = st.session_state
+if 'flask_started' not in state:
+    state.flask_started = False
 
-if __name__ == "__main__":
+def start_flask():
+    if state.flask_started:
+        return
 
-    from tornado.wsgi import WSGIContainer
-    from tornado.httpserver import HTTPServer
-    from tornado.ioloop import IOLoop
+    import os, sys, time
+    import subprocess
+    import threading
 
-    http_server = HTTPServer(WSGIContainer(app))
-    http_server.listen(8000)
-    IOLoop.instance().start()
+    def _run(job):
+        print (f'\nRunning job: {job}\n')
+        proc = subprocess.Popen(job)
+        proc.wait()
+        return proc
+
+    job = [f'{sys.executable}', os.path.join('.', 'flask_runner.py'), 'localhost', '8888']
+
+    # server thread will remain active as long as streamlit thread is running, or is manually shutdown
+    thread = threading.Thread(name='Flask Server', target=_run, args=(job,), daemon=False)
+    thread.start()
+
+    time.sleep(5)
+    state.flask_started = True
+
+flask_message = st.empty()
+x = st.slider('Pick a number')
+st.write('You picked:', x)
+
+start_flask()
+
+if state.flask_started:
+    resp = requests.get('http://localhost:8888/foo').text
+    flask_message.write(resp)
